@@ -46,35 +46,44 @@ For the second example, there is no valid placement.
 /* Enter your code here. Read input from STDIN. Print output to STDOUT */
 
 #include <iostream>
-#include <unordered_map>
+//#include <unordered_map>
 
 using namespace std;
 
-unsigned long long count(int bitmap, int pos, int n, int k, unordered_map<int, unsigned long long> &cache) {
+unsigned long long count(int bitmap, int pos, int n, int k, unsigned long long *cache) {
     if (k > n) return 0;
     unsigned long long c = 0;
+    //printf("0x%x: %d\n", bitmap, (int)c);
     for (int i = 0; i < n; i++) {
         if ((bitmap & (1 << i)) == 0 && i != (pos + 1) && i != (pos - 1)) {
             if (k == n) {
-                c++;
-                /*
-                int overlap = 0;
-                if (((pos + 1) %n) & bitmap) overlap++;
-                if (((pos + n - 1) % n) & bitmap) overlap++;
-                return legal - 2 + overlap;
-                */
-            }
-            //can we find the result in cache?
-            int key = bitmap | (i << 16);
-            key |= (1 << i);
-            if (cache.find(key) != cache.end()) c += cache[key];
-            else c += count(bitmap | (1 << i), i, n, k + 1, cache);
+            	//printf("0x%x: %d\n", bitmap, (int)c);
+                c++;   
+                //continue;           
+            } else {
+            	//can we find the result in cache?
+	            int key = bitmap | (i << 16);
+    	        key |= (1 << i);
+        	    if (cache[key] != 0) c += cache[key];
+            	else c += count(bitmap | (1 << i), i, n, k + 1, cache);
+            }            
         }
     }
     //cout << k << ":" << n << "," << c << endl;
+    //if (c > 1000000007) c -= 1000000007;
     cache[bitmap | (pos << 16)] = c;
+
     return c;
 }
+
+void clearCache(unsigned long long *cache, int size)
+{
+	for (int i = 0; i < size; i++) {
+		cache[i] = 0;
+	}
+}
+
+unsigned long long *cache = new unsigned long long[1 << 21];
 
 int main() {
     int t = 0;
@@ -83,27 +92,27 @@ int main() {
     int legal = 0;
     int bitmap = 0;
     int pos = 0;
-    unordered_map<int, unsigned long long> cache;
+    
     for (int i = 0; i < t; i++) {
         cin >> n >> k;
-        //cout << n << " + " << k << endl;
-        if (n <= 3) {
-            cout << "0\n";
-            continue;
-        }
-        //legal = n;
+       	//cout << n << " + " << k << endl;        
         bitmap = 0;
+        pos = -2;
         for (int j = 0; j < k; j++) {
             cin >> pos;
-            //if (!(bitmap & (1 << pos))) legal--;
             bitmap |= (1 << pos); 
+        }
+        if (n == 3 || n == 2) {
+            cout << "0\n";
+            continue;
         }
         if (n == k) {
             cout << "1" << endl;
             continue;
         }
         //count remaining map
-        cache.clear();
+        //cache.clear();
+        clearCache(cache, 1 << 21);
         cout << count(bitmap, pos, n, k + 1, cache) % 1000000007 << endl;
     }
 }
